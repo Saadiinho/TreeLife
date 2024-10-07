@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,14 +15,17 @@ namespace TreeLife.Views2
     public class SubTreeView: GraphicBase
     {
         // ***** Attributes
+        private bool _childrenVisible = false;
         private readonly List<GraphicBase> _children = new List<GraphicBase>();
 
         // ***** Methods
         // Constructor
         private SubTreeView(Panel canvas, int id, Point position, float angle, INodeInformation nodeInfo, bool isRoot = false) : base(canvas, id, position, angle)
         {
+            _childrenVisible = isRoot;
             if (!isRoot) DefineNodeChildren(nodeInfo);
         }
+
 
         static public SubTreeView BuildTree(Panel canvas, int id, Point position, INodeInformation nodeInfo)
         {
@@ -30,17 +34,33 @@ namespace TreeLife.Views2
             treeView.DefineNodeChildren(nodeInfo, 360, isRoot);
             return treeView;
         }
+
+
         // Getters & Setters
+        private bool ChildrenAreVisible() { return _childrenVisible; }
+
+        private void SetChildrenVisibility(bool visible)
+        {
+            _childrenVisible = visible;
+            Canvas.Invalidate();
+        }
 
         private void AddChild(GraphicBase child)
         {
             _children.Add(child);
         }
 
+
         private void RemoveChild(GraphicBase child)
         {
             _children.Remove(child);
         }
+
+        private List<GraphicBase> GetAllGraphicChildren()
+        {
+            return _children;
+        }
+
 
         private void DefineNodeChildren(INodeInformation nodeInfo, float totalAngleRange = 180.0f, bool isRoot = false)
         {
@@ -54,18 +74,23 @@ namespace TreeLife.Views2
 
             for (int i = 0; i < numberOfChildren; i += 1)
             {
-                float angleDegrees = CalculateDegreesAngle(isRoot, RelativeAngleToParent, i, angleIncrement, -90);
+                float angleDegrees = CalculateDegreesAngle(isRoot, RelativeAngleToParent, i, angleIncrement);
                 Point childPosition1 = CalculateChildPosition(branchLength, angleDegrees);
                 AddChild(DefineChild(nodeInfo, Canvas, childrenIds[i], childPosition1, angleDegrees));
             }
+
+            Canvas.Paint += (sender, e) => InteractWithImmediateChildren(e.Graphics);
+
         }
 
-        private float CalculateDegreesAngle(bool isRoot, float relativeAngleToParent, int childIndex, float angleIncrement, int delta)
+
+        private float CalculateDegreesAngle(bool isRoot, float relativeAngleToParent, int childIndex, float angleIncrement)
         {
-            float angle = (childIndex * angleIncrement + delta);
-            if (!isRoot) angle += relativeAngleToParent;
+            float angle = (childIndex * angleIncrement);
+            if (!isRoot) angle += (relativeAngleToParent - 90);
             return angle;
         }
+
 
         private Point CalculateChildPosition(float d, float angleDegress)
         {
@@ -77,6 +102,7 @@ namespace TreeLife.Views2
             return new Point(childX, childY);
         }
 
+
         private GraphicBase DefineChild(INodeInformation nodeInfo, Panel canvas, int id, Point Position, float angle)
         {
             return nodeInfo.GetNodeType(id) == NodeType.Leaf
@@ -84,16 +110,29 @@ namespace TreeLife.Views2
                 : new SubTreeView(canvas, id, Position, angle, nodeInfo);
         }
 
+
         // ***** Interface implementation
         // Draw the current node and its children
-        public override void Draw()
+
+        private bool AtLeastOneChildrenHasAChildrenDisplayed()
         {
-            AddButtonView();
+            if (_children.Count == 0) return true;
 
             foreach (var child in _children)
             {
-                child.Draw();
+                if (child is LeafView leaf) continue;
+                if (child is SubTreeView subtree)
+                {
+                   if (subtree.GetAllGraphicChildren().Any(c => c.isDisplayed())) return true;
+                }
             }
+            return false;
+        }
+
+
+        public override void Draw()
+        {
+            AddButtonView(() => SetChildrenVisibility(!_childrenVisible));
         }
 
 
@@ -101,13 +140,66 @@ namespace TreeLife.Views2
         public override void DeleteDraw()
         {
             DeleteButton();
+        }
 
+        private void DrawImmediateChildren(Graphics g)
+        {
+
+            if (_childrenVisible)
+            {
+                using (Pen pen = new Pen(Color.Black, 2))
+                {
+                    Point parentCenter = this.GetCenter();
+
+                    foreach (var child in _children)
+                    {
+                        child.Draw();
+                        g.DrawLine(pen, parentCenter, child.GetCenter());
+                    }
+                }
+            }
+        }
+
+
+        private void DeleteImmediateChildren()
+        {
             foreach (var child in _children)
             {
                 child.DeleteDraw();
             }
         }
 
+
+        private void InteractWithImmediateChildren(Graphics g)
+        {
+            if (_childrenVisible) {
+                DrawImmediateChildren(g);
+                return;
+            }
+            if (AtLeastOneChildrenHasAChildrenDisplayed())
+            {
+                // Then it is impossible to delete anything
+                _childrenVisible = true;
+                InteractWithImmediateChildren(g);
+                return;
+            };
+            DeleteImmediateChildren();
+        }
+
+
+        public override void Zoom(float zoomFactor, float mouseX, float mouseY, float previousZoomFactor)
+        {
+            base.Zoom(zoomFactor, mouseX, mouseY, previousZoomFactor);
+
+            foreach (var child in _children)
+            {
+                child.Zoom(zoomFactor, mouseX, mouseY, previousZoomFactor);
+            }
+
+            Canvas.Invalidate();
+        }
+
         // ***** Other Methods
+
     }
 }

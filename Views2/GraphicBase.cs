@@ -16,6 +16,9 @@ namespace TreeLife.Views2
         private readonly Panel _canvas;
         private Point _position;
         private float _relativeAngleToParent;
+
+        private int _btnWidth = 40;
+        private int _btnHeight = 40;
         private Button _btnView;
 
         // ***** Methods
@@ -30,7 +33,7 @@ namespace TreeLife.Views2
         }
 
         // Gets & Setters
-        protected int Id
+        public int Id
         {
             get { return _id; }
         }
@@ -52,16 +55,36 @@ namespace TreeLife.Views2
             set { _relativeAngleToParent = value; }
         }
 
-        protected Button BtnView
+        public int BtnWidth
+        {
+            get { return _btnWidth; }
+            set { _btnWidth = value; }
+        }
+
+        public int BtnHeight
+        {
+            get { return _btnHeight; }
+            set { _btnHeight = value; }
+        }
+
+        public Button BtnView
         {
             get { return _btnView; }
             set { _btnView = value; }
         }
 
-        protected void AddButtonView()
+        protected void AddButtonView(Action action = null)
         {
-            _btnView = CreateButton();
-            Canvas.Controls.Add(_btnView);
+            if (BtnView == null)
+            {
+                BtnView = CreateButton(action);
+                Canvas.Controls.Add(BtnView);
+            }
+        }
+
+        public Point GetCenter()
+        {
+            return new Point(Position.X + BtnView.Width / 2, Position.Y + BtnView.Height / 2);
         }
 
         // ***** Interface implementation: IGraphic
@@ -70,19 +93,25 @@ namespace TreeLife.Views2
 
 
         // ***** Create and Delete Methods for all form of drawings. Here there are two forms: TODO => Define which form we will deal with ...
-        private Button CreateButton()
+        private Button CreateButton(Action action = null)
         {
+            if (action == null) action = () => { };
+
             Button nodeButton = new Button
             {
                 Text = Id.ToString(),
                 Location = new Point(Position.X, Position.Y),
-                Size = new Size(40, 40),
+                Size = new Size(BtnWidth, BtnHeight),
                 BackColor = Color.LightGray
             };
 
-            nodeButton.Click += (sender, e) => DeleteDraw();
+            nodeButton.Click += (sender, e) => action();
+            nodeButton.MouseEnter += (sender, e) => action();
+
             return nodeButton;
         }
+
+        public bool isDisplayed() { return BtnView != null; }
 
         public void DeleteButton()
         {
@@ -91,6 +120,39 @@ namespace TreeLife.Views2
                 BtnView.Parent.Controls.Remove(BtnView);
                 BtnView.Dispose();
                 BtnView = null;
+            }
+        }
+
+        private void SetBtnSize(float zoomFactor)
+        {
+            // Define both with and height depending on the zoomFactor
+            int width = (int)(BtnWidth * zoomFactor);
+            int height = (int)(BtnHeight * zoomFactor);
+
+            if (width < 30) width = 30;
+            if (width > 40) width = 40;
+            if (height < 30) height = 30;
+            if (height > 40) height = 40;
+
+            BtnWidth = width;
+            BtnHeight = height;
+        }
+
+        private void SetBtnPosition(float zoomFactor, float mouseX, float mouseY, float previousZoomFactor)
+        {
+            float zoomRatio = zoomFactor / previousZoomFactor;
+            Position = new Point((int)(Position.X * zoomRatio + mouseX * (1 - zoomRatio)), (int)(Position.Y * zoomRatio + mouseY * (1 - zoomRatio)));
+        }
+
+        public virtual void Zoom(float zoomFactor, float mouseX, float mouseY, float previousZoomFactor)
+        {
+            SetBtnSize(zoomFactor);
+            SetBtnPosition(zoomFactor, mouseX, mouseY, previousZoomFactor);
+
+            if (BtnView != null)
+            {
+                BtnView.Size = new Size(BtnWidth, BtnHeight);
+                BtnView.Location = Position;
             }
         }
 
