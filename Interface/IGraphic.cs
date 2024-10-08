@@ -18,5 +18,6 @@ namespace TreeLife.Interface
 
         void Zoom(float zoomFactor, float mouseX, float mouseY, float previousZoomFactor);
 
+        void Move(int x, int y);
     }
 }

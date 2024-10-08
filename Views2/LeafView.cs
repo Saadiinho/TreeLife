@@ -14,7 +14,7 @@ namespace TreeLife.Views2
 
         // ***** Methods
         // Constructor
-        public LeafView(Panel canvas, int id, Point position, float angle) : base(canvas, id, position, angle)
+        public LeafView(INodeInformation nodeInfo, Panel canvas, int id, Point position, float angle) : base(nodeInfo, canvas, id, position, angle)
         {
         }
 

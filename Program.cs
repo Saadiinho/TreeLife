@@ -11,6 +11,7 @@ using TreeLife.Enum;
 using TreeLife.Interface;
 using TreeLife.Views2;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Reflection;
 
 namespace TreeLife
 {
@@ -24,20 +25,39 @@ namespace TreeLife
         [STAThread]
         static void Main()
         {
+            // *************************************************************************** BACKEND PART
+
             //Récupération des paths pour les fichiers CSV
             string projectDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
-            string linkFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_links_simplified.csv");
-            string nodeFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_nodes_simplified.csv");
+            string linkFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_links.csv");
+            string nodeFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_nodes.csv");
 
             AllocConsole();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            //Appel du model
-            Model model = new Model(linkFile:linkFile, nodeFile:nodeFile);
-            List<Node> test = model.childNode(2285);
+            // ******* Model
+            Model treeLifeModel = new Model(linkFile:linkFile, nodeFile:nodeFile);
 
-            Application.Run(new Form1());
+            // ******* Controller
+            Controller treeLifeController = new Controller(treeLifeModel);
+
+            // *************************************************************************** FRONTEND PART
+
+            const int appWidth = 800;
+            const int appHeight = 800;
+
+            // mainFrom
+            Form mainForm = new Form
+            {
+                Text = "Tree of Life",
+                Size = new System.Drawing.Size(appWidth, appHeight)
+            };
+
+            // ******* View
+            TreeLifeView treeLifeView = new TreeLifeView(treeLifeController, mainForm, appWidth / 2, appHeight / 2);
+
+            Application.Run(mainForm);
         }
     }
 }

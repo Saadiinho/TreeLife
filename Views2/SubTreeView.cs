@@ -4,11 +4,14 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using TreeLife.Enum;
 using TreeLife.Interface;
+using TreeLife.Models;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace TreeLife.Views2
 {
@@ -16,22 +19,23 @@ namespace TreeLife.Views2
     {
         // ***** Attributes
         private bool _childrenVisible = false;
+        private bool _paintEventAttached = false;
+
         private readonly List<GraphicBase> _children = new List<GraphicBase>();
 
         // ***** Methods
         // Constructor
-        private SubTreeView(Panel canvas, int id, Point position, float angle, INodeInformation nodeInfo, bool isRoot = false) : base(canvas, id, position, angle)
+        private SubTreeView(INodeInformation nodeInfo, Panel canvas, int id, Point position, float angle) : base(nodeInfo, canvas, id, position, angle)
         {
-            _childrenVisible = isRoot;
-            if (!isRoot) DefineNodeChildren(nodeInfo);
+            //if (!isRoot) LoadNodeChildren(nodeInfo);
+            //ConnectEventToUserView();
         }
 
 
-        static public SubTreeView BuildTree(Panel canvas, int id, Point position, INodeInformation nodeInfo)
+        static public SubTreeView BuildTree(INodeInformation nodeInfo, Panel canvas, int id, Point position)
         {
-            bool isRoot = true;
-            SubTreeView treeView = new SubTreeView(canvas, id, position, 0, nodeInfo, isRoot);
-            treeView.DefineNodeChildren(nodeInfo, 360, isRoot);
+            SubTreeView treeView = new SubTreeView(nodeInfo, canvas, id, position, 0);
+            //treeView.ConnectEventToUserView();
             return treeView;
         }
 
@@ -42,6 +46,14 @@ namespace TreeLife.Views2
         private void SetChildrenVisibility(bool visible)
         {
             _childrenVisible = visible;
+
+            if (!_paintEventAttached)
+            {
+                Canvas.Paint += (sender, e) => InteractWithImmediateChildren(e.Graphics);
+                _paintEventAttached = true;  // Marque comme attaché pour éviter plusieurs attachements
+            }
+
+
             Canvas.Invalidate();
         }
 
@@ -61,33 +73,41 @@ namespace TreeLife.Views2
             return _children;
         }
 
-
-        private void DefineNodeChildren(INodeInformation nodeInfo, float totalAngleRange = 180.0f, bool isRoot = false)
+        private bool childrenAlreadyLoaded()
         {
-            List<int> childrenIds = nodeInfo.GetChildren(Id);
+            return _children.Count == Controller.GetChildren(Id).Count();
+        }
+
+        private void LoadNodeChildren(float totalAngleRange = 180.0f)
+        {
+            if (childrenAlreadyLoaded()) return;
+
+            print($"    [{Id}] =========> DEBUT CHARGEMENT");
+
+            List<int> childrenIds = Controller.GetChildren(Id);
             int numberOfChildren = childrenIds.Count;
 
             if (numberOfChildren <= 0) return;
 
             int branchLength = 150; // TODO => The branch length must depend on the child of all the node
-            float angleIncrement = totalAngleRange / numberOfChildren;
+            float angleIncrement = ((IsRoot())? 360: totalAngleRange) / numberOfChildren;
 
             for (int i = 0; i < numberOfChildren; i += 1)
             {
-                float angleDegrees = CalculateDegreesAngle(isRoot, RelativeAngleToParent, i, angleIncrement);
+                float angleDegrees = CalculateDegreesAngle(RelativeAngleToParent, i, angleIncrement);
                 Point childPosition1 = CalculateChildPosition(branchLength, angleDegrees);
-                AddChild(DefineChild(nodeInfo, Canvas, childrenIds[i], childPosition1, angleDegrees));
+                AddChild(DefineChild(Controller, Canvas, childrenIds[i], childPosition1, angleDegrees));
             }
 
-            Canvas.Paint += (sender, e) => InteractWithImmediateChildren(e.Graphics);
-
+            print(($"   [{Id}] xxxxxxxxxxx CHARGEMENT"));
         }
 
+        private bool IsRoot() { return Id == 1; }
 
-        private float CalculateDegreesAngle(bool isRoot, float relativeAngleToParent, int childIndex, float angleIncrement)
+        private float CalculateDegreesAngle(float relativeAngleToParent, int childIndex, float angleIncrement)
         {
             float angle = (childIndex * angleIncrement);
-            if (!isRoot) angle += (relativeAngleToParent - 90);
+            if (!IsRoot()) angle += (relativeAngleToParent - 90);
             return angle;
         }
 
@@ -106,8 +126,8 @@ namespace TreeLife.Views2
         private GraphicBase DefineChild(INodeInformation nodeInfo, Panel canvas, int id, Point Position, float angle)
         {
             return nodeInfo.GetNodeType(id) == NodeType.Leaf
-                ? (GraphicBase)new LeafView(canvas, id, Position, angle)
-                : new SubTreeView(canvas, id, Position, angle, nodeInfo);
+                ? (GraphicBase)new LeafView(nodeInfo,canvas, id, Position, angle)
+                : new SubTreeView(nodeInfo,canvas, id, Position, angle);
         }
 
 
@@ -144,7 +164,6 @@ namespace TreeLife.Views2
 
         private void DrawImmediateChildren(Graphics g)
         {
-
             if (_childrenVisible)
             {
                 using (Pen pen = new Pen(Color.Black, 2))
@@ -172,6 +191,8 @@ namespace TreeLife.Views2
 
         private void InteractWithImmediateChildren(Graphics g)
         {
+            LoadNodeChildren();
+
             if (_childrenVisible) {
                 DrawImmediateChildren(g);
                 return;
@@ -184,6 +205,11 @@ namespace TreeLife.Views2
                 return;
             };
             DeleteImmediateChildren();
+        }
+
+        private void ConnectEventToUserView()
+        {
+            Canvas.Paint += (sender, e) => InteractWithImmediateChildren(e.Graphics);
         }
 
 
@@ -199,6 +225,17 @@ namespace TreeLife.Views2
             Canvas.Invalidate();
         }
 
+        public override void Move(int x, int y)
+        {
+            base.Move(x, y);
+
+            foreach (var child in _children)
+            {
+                child.Move(x, y);
+            }
+
+            Canvas.Invalidate();
+        }
         // ***** Other Methods
 
     }

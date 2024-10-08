@@ -71,7 +71,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\Link.cs" />
+    <Compile Include="Controller\Controller.cs" />
+    <Compile Include="Models\LinkMap.cs" />
     <Compile Include="Models\Model.cs" />
     <Compile Include="Models\Node.cs" />
     <Compile Include="Views\Form1.cs">
@@ -80,10 +81,9 @@
     <Compile Include="Views\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Back\NodeInformation.cs" />
     <Compile Include="Enum\NodeType.cs" />
     <Compile Include="Interface\IGraphic.cs" />
-    <Compile Include="Interface\INodeInformation.cs" />
+    <Compile Include="Back-Front-Interaction\INodeInformation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Views2\GraphicBase.cs" />
@@ -100,6 +100,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Views\Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

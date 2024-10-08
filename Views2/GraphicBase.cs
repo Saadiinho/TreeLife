@@ -12,6 +12,7 @@ namespace TreeLife.Views2
     public abstract class GraphicBase : IGraphic
     {
         // ***** Attributes
+        private INodeInformation _controller;
         private readonly int _id;       
         private readonly Panel _canvas;
         private Point _position;
@@ -24,8 +25,9 @@ namespace TreeLife.Views2
         // ***** Methods
         // Constructor
 
-        protected GraphicBase(Panel canvas, int id, Point position, float relativeAngleToParent)
+        protected GraphicBase(INodeInformation controller, Panel canvas, int id, Point position, float relativeAngleToParent)
         {
+            this._controller = controller;
             this._id = id;
             this._canvas = canvas;
             this._position = position;
@@ -33,6 +35,10 @@ namespace TreeLife.Views2
         }
 
         // Gets & Setters
+        protected INodeInformation Controller
+        {
+            get { return _controller; }
+        }
         public int Id
         {
             get { return _id; }
@@ -156,6 +162,21 @@ namespace TreeLife.Views2
             }
         }
 
+        private void SetBtnPosition(int x, int y)
+        {
+            Position = new Point(x, y);
+        }
+
+        public virtual void Move(int x, int y)
+        {
+            SetBtnPosition(Position.X + x, Position.Y + y);
+
+            if (BtnView != null)
+            {
+                BtnView.Location = Position;
+            }
+        }
+
         // TODO => see what we need to with this one ...
         public void LineTowardParent(GraphicBase parent)
         {
@@ -169,6 +190,11 @@ namespace TreeLife.Views2
                 Point childCenter = new Point(this.Position.X, this.Position.Y);
                 g.DrawLine(pen, parentCenter, childCenter);
             }
+        }
+
+        public void print(string message)
+        {
+            Console.WriteLine(message);
         }
     }
 }
