@@ -27,5 +27,10 @@ namespace TreeLife
         {
             return GetChildren(nodeId).Count > 0 ? NodeType.Parent : NodeType.Leaf;
         }
+
+        Node INodeInformation.GetNode(int nodeId)
+        {
+            return _model.GetNode(nodeId);
+        }
     }
 }

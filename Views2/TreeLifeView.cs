@@ -11,42 +11,69 @@ namespace TreeLife.Views2
 {
     public class TreeLifeView
     {
+        private DetailedLeafView _detailedLeafView;
         private SubTreeView _treeView;
         // zoom
         private float _zoomFactor = 1.0f;     // Intial zoom factor
         private const float ZoomStep = 0.5f;  // zoom (0.1 = 10% per scrolling)
         private const float MaxZoom = 300.0f;   // maximum zoom (30000%)
-        private const float MinZoom = 0.3f;   // minimum zoom (0.30%)
+        private const float MinZoom = 0.9f;   // minimum zoom (0.30%)
         // drag & drop
         private bool _isDragging = false;
         private Point _lastMousePosition;
 
 
-        public TreeLifeView(INodeInformation nodeInfo, Form userForm, int x, int y)
+        public TreeLifeView(INodeInformation nodeInfo, Form userForm)
         {
-            Panel canvas = new Panel
-            {
-                Size = new System.Drawing.Size(userForm.Width - 100, userForm.Height - 100)
-            };
+            // ****** FIRST VIEW
+            Panel treePanel = CreateTreeViewPanel(nodeInfo, userForm);
 
-            _treeView = SubTreeView.BuildTree(nodeInfo, canvas, 1, new Point(x, y));
-            _treeView.Draw();
+            // ****** SECOND VIEW
+            Panel detailsPanel = CreateDetailedLeafViewPanel(nodeInfo, userForm);
 
-            // zoom
-            canvas.MouseWheel += OnMouseWheel;
-
-            // drag & drop
-            canvas.MouseDown += OnMouseDown;
-            canvas.MouseMove += OnMouseMove;
-            canvas.MouseUp += OnMouseUp;
-
-            userForm.Controls.Add(canvas);
+            userForm.Controls.Add(treePanel);
+            userForm.Controls.Add(detailsPanel);
         }
 
-        public Point GetPosition() { return _treeView.Position; }
+        private Panel CreateTreeViewPanel(INodeInformation nodeInfo, Form userForm)
+        {
+            Panel treePanel = new Panel
+            {
+                Size = new System.Drawing.Size(userForm.Width - 200, userForm.Height),
+                Location = new Point(0, 0),
+            };
 
-        public void SetPosition(Point newPosition) { _treeView.Position = newPosition; }
+            _treeView = SubTreeView.BuildTree(nodeInfo, treePanel, 1, new Point(treePanel.Width / 2, treePanel.Height / 2));
+            _treeView.Draw();
 
+            // zoom, drag & drop events
+            treePanel.MouseWheel += OnMouseWheel;
+            treePanel.MouseDown += OnMouseDown;
+            treePanel.MouseMove += OnMouseMove;
+            treePanel.MouseUp += OnMouseUp;
+
+            return treePanel;
+        }
+
+        private Panel CreateDetailedLeafViewPanel(INodeInformation nodeInfo, Form userForm)
+        {
+            Panel detailedLeafViewPanel = new Panel
+            {
+                Size = new System.Drawing.Size(200, userForm.Height),
+                Location = new Point(userForm.Width - 200, 0),
+                BackColor = Color.LightGray
+            };
+
+            _detailedLeafView = new DetailedLeafView(nodeInfo)
+            {
+                Location = new Point(0, 0),
+                Size = detailedLeafViewPanel.Size
+            };
+
+            detailedLeafViewPanel.Controls.Add(_detailedLeafView);
+
+            return detailedLeafViewPanel;
+        }
 
         private void OnMouseWheel(object sender, MouseEventArgs e)
         {

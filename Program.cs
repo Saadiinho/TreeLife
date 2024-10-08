@@ -32,7 +32,7 @@ namespace TreeLife
             string linkFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_links.csv");
             string nodeFile = Path.Combine(projectDirectory, "TreeLife/treeoflife_nodes.csv");
 
-            AllocConsole();
+            //AllocConsole();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -44,8 +44,8 @@ namespace TreeLife
 
             // *************************************************************************** FRONTEND PART
 
-            const int appWidth = 800;
-            const int appHeight = 800;
+            const int appWidth = 1100;
+            const int appHeight = 700;
 
             // mainFrom
             Form mainForm = new Form
@@ -55,7 +55,7 @@ namespace TreeLife
             };
 
             // ******* View
-            TreeLifeView treeLifeView = new TreeLifeView(treeLifeController, mainForm, appWidth / 2, appHeight / 2);
+            new TreeLifeView(treeLifeController, mainForm);
 
             Application.Run(mainForm);
         }

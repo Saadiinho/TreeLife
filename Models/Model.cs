@@ -31,7 +31,7 @@ namespace TreeLife.Models
             return linksMap.GetChildren(nodeId);
         }
 
-        public Node GetChildNode(int nodeId)
+        public Node GetNode(int nodeId)
         {
             return nodesMap[nodeId];
         }

@@ -18,8 +18,8 @@ namespace TreeLife.Views2
         private Point _position;
         private float _relativeAngleToParent;
 
-        private int _btnWidth = 40;
-        private int _btnHeight = 40;
+        private int _btnWidth = 80;
+        private int _btnHeight = 30;
         private Button _btnView;
 
         // ***** Methods
@@ -105,7 +105,7 @@ namespace TreeLife.Views2
 
             Button nodeButton = new Button
             {
-                Text = Id.ToString(),
+                Text = _controller.GetNode(Id).NodeName,
                 Location = new Point(Position.X, Position.Y),
                 Size = new Size(BtnWidth, BtnHeight),
                 BackColor = Color.LightGray
@@ -129,16 +129,23 @@ namespace TreeLife.Views2
             }
         }
 
+        private int Clamp(int value, int min, int max)
+        {
+            return (value < min) ? min : (value > max) ? max : value;
+        }
+
         private void SetBtnSize(float zoomFactor)
         {
-            // Define both with and height depending on the zoomFactor
             int width = (int)(BtnWidth * zoomFactor);
             int height = (int)(BtnHeight * zoomFactor);
 
-            if (width < 30) width = 30;
-            if (width > 40) width = 40;
-            if (height < 30) height = 30;
-            if (height > 40) height = 40;
+            int normalWidth = 80;
+            int normalHeight = 30;
+
+            int marge = 10;
+
+            width = Clamp(width, normalWidth - marge, normalWidth + marge);
+            height = Clamp(height, normalHeight - marge, normalHeight + marge);
 
             BtnWidth = width;
             BtnHeight = height;
@@ -175,26 +182,6 @@ namespace TreeLife.Views2
             {
                 BtnView.Location = Position;
             }
-        }
-
-        // TODO => see what we need to with this one ...
-        public void LineTowardParent(GraphicBase parent)
-        {
-            if (parent == null)
-                return;
-
-            using (Graphics g = Canvas.CreateGraphics())
-            {
-                Pen pen = new Pen(Color.Black, 2);
-                Point parentCenter = new Point(parent.Position.X, parent.Position.Y);
-                Point childCenter = new Point(this.Position.X, this.Position.Y);
-                g.DrawLine(pen, parentCenter, childCenter);
-            }
-        }
-
-        public void print(string message)
-        {
-            Console.WriteLine(message);
         }
     }
 }

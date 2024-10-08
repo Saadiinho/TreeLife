@@ -27,15 +27,13 @@ namespace TreeLife.Views2
         // Constructor
         private SubTreeView(INodeInformation nodeInfo, Panel canvas, int id, Point position, float angle) : base(nodeInfo, canvas, id, position, angle)
         {
-            //if (!isRoot) LoadNodeChildren(nodeInfo);
-            //ConnectEventToUserView();
+
         }
 
 
         static public SubTreeView BuildTree(INodeInformation nodeInfo, Panel canvas, int id, Point position)
         {
             SubTreeView treeView = new SubTreeView(nodeInfo, canvas, id, position, 0);
-            //treeView.ConnectEventToUserView();
             return treeView;
         }
 
@@ -50,7 +48,7 @@ namespace TreeLife.Views2
             if (!_paintEventAttached)
             {
                 Canvas.Paint += (sender, e) => InteractWithImmediateChildren(e.Graphics);
-                _paintEventAttached = true;  // Marque comme attaché pour éviter plusieurs attachements
+                _paintEventAttached = true;
             }
 
 
@@ -82,7 +80,7 @@ namespace TreeLife.Views2
         {
             if (childrenAlreadyLoaded()) return;
 
-            print($"    [{Id}] =========> DEBUT CHARGEMENT");
+            //Console.WriteLine($"    [{Id}] =========> DEBUT CHARGEMENT");
 
             List<int> childrenIds = Controller.GetChildren(Id);
             int numberOfChildren = childrenIds.Count;
@@ -99,7 +97,7 @@ namespace TreeLife.Views2
                 AddChild(DefineChild(Controller, Canvas, childrenIds[i], childPosition1, angleDegrees));
             }
 
-            print(($"   [{Id}] xxxxxxxxxxx CHARGEMENT"));
+            //Console.WriteLine(($"   [{Id}] xxxxxxxxxxx CHARGEMENT"));
         }
 
         private bool IsRoot() { return Id == 1; }
@@ -126,7 +124,7 @@ namespace TreeLife.Views2
         private GraphicBase DefineChild(INodeInformation nodeInfo, Panel canvas, int id, Point Position, float angle)
         {
             return nodeInfo.GetNodeType(id) == NodeType.Leaf
-                ? (GraphicBase)new LeafView(nodeInfo,canvas, id, Position, angle)
+                ? (GraphicBase)new LeafView(nodeInfo,canvas, Id, id, Position, angle)
                 : new SubTreeView(nodeInfo,canvas, id, Position, angle);
         }
 

@@ -72,9 +72,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controller\Controller.cs" />
+    <Compile Include="Event\LeafSelectedEvent.cs" />
     <Compile Include="Models\LinkMap.cs" />
     <Compile Include="Models\Model.cs" />
     <Compile Include="Models\Node.cs" />
+    <Compile Include="Views2\DetailedLeafView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views2\DetailedLeafView.Designer.cs">
+      <DependentUpon>DetailedLeafView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -100,6 +107,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Views2\DetailedLeafView.resx">
+      <DependentUpon>DetailedLeafView.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Views\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
