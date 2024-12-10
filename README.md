@@ -1,6 +1,6 @@
 # Projet Arbre de Vie
 
-** PolyTech Paris-Saclay C# & .NET**
+# PolyTech Paris-Saclay C# & .NET
 
 ## Description du Projet
 
